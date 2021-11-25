@@ -1,4 +1,5 @@
-import * as service from '../service/signupService'
+import * as service from '../service/signinService.js';
+import jwt from "jsonwebtoken";
 
 async function signin (req, res) {
 
@@ -9,27 +10,26 @@ async function signin (req, res) {
       return res.sendStatus(400);
     }
 
-    const user = await connection.query(
-      `SELECT * FROM "users" WHERE "email"=$1`,
-      [email]
-    );
-
-    if (!user.rows[0] || !bcrypt.compareSync(password, user.rows[0].password)) {
-      return res.sendStatus(401);
+    const user = await service.checkInputs(email, password)
+    if(!user){
+        return res.sendStatus(401)
     }
 
     const token = jwt.sign({
-      id: user.rows[0].id
+      id: user.id
     }, process.env.JWT_SECRET);
 
     res.send({
       token
-    });
+    }).status(200);
+
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
   }
 }
+
 export {
-    signin,
+  signin,
 }
+
